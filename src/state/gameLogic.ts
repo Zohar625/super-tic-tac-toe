@@ -1,4 +1,4 @@
-import { Board, CellValue, GameState } from './types';
+import type { Board, CellValue, GameState } from './types';
 import { createEmptyBoard } from './types';
 
 // Directions to check: horizontal, vertical, two diagonals

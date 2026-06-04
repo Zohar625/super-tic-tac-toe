@@ -1,5 +1,5 @@
 import Cell from './Cell';
-import { CellValue } from '../state/types';
+import type { CellValue } from '../state/types';
 import { useTheme } from '../theme/ThemeContext';
 import styles from '../styles/SmallBoard.module.css';
 

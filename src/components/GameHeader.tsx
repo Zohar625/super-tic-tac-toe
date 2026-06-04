@@ -1,4 +1,4 @@
-import { Player } from '../state/types';
+import type { Player } from '../state/types';
 import { useTheme } from '../theme/ThemeContext';
 import { getPieceSymbol } from '../theme/themes';
 import styles from '../styles/GameHeader.module.css';

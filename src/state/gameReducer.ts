@@ -1,4 +1,4 @@
-import { GameState, Move } from './types';
+import type { GameState, Move } from './types';
 import {
   checkWin,
   createInitialState,

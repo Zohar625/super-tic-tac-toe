@@ -1,5 +1,5 @@
 import SmallBoard from './SmallBoard';
-import { Board, GameState } from '../state/types';
+import type { GameState } from '../state/types';
 import styles from '../styles/BigBoard.module.css';
 
 interface BigBoardProps {

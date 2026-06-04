@@ -1,4 +1,4 @@
-import { ThemeConfig } from '../state/types';
+import type { ThemeConfig } from '../state/types';
 
 export const classicTheme: ThemeConfig = {
   boardSkin: 'classic',
