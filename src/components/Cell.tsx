@@ -18,7 +18,7 @@ export default function Cell({ value, onClick, disabled }: CellProps) {
   const markClass =
     value === 'X' ? styles.xMark : value === 'O' ? styles.oMark : styles.empty;
 
-  const symbol = value ? getPieceSymbol(theme.pieceSet, value) : '';
+  const symbol = value ? getPieceSymbol(theme.pieceSet, value) : '·';
 
   return (
     <button
