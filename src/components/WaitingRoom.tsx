@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Player, MultiplayerSession } from '../state/types';
 import { supabase } from '../supabase/client';
-import { deleteRoom } from '../multiplayer/roomManager';
+import { deleteRoom, getRoom } from '../multiplayer/roomManager';
 
 interface WaitingRoomProps {
   session: MultiplayerSession;
@@ -11,9 +11,20 @@ interface WaitingRoomProps {
 
 export default function WaitingRoom({ session, onJoined, onLeave }: WaitingRoomProps) {
   const [copied, setCopied] = useState(false);
+  const onJoinedRef = useRef(onJoined);
+  onJoinedRef.current = onJoined;
 
   useEffect(() => {
-    // Watch for guest joining via Realtime
+    let cancelled = false;
+
+    // Poll once in case guest already joined before subscription was active
+    getRoom(session.roomId).then((room) => {
+      if (cancelled) return;
+      if (room?.guestId) {
+        onJoinedRef.current(room.hostSide || 'X');
+      }
+    });
+
     const channel = supabase
       .channel(`room-guest:${session.roomId}`)
       .on(
@@ -25,18 +36,20 @@ export default function WaitingRoom({ session, onJoined, onLeave }: WaitingRoomP
           filter: `id=eq.${session.roomId}`,
         },
         (payload) => {
-          if (payload.new.guest_id) {
+          if (payload.new.guest_id && !cancelled) {
             const hostPlayer = (payload.new.host_side as Player) || 'X';
-            onJoined(hostPlayer);
+            cancelled = true; // prevent poll from double-firing
+            onJoinedRef.current(hostPlayer);
           }
         }
       )
       .subscribe();
 
     return () => {
+      cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [session.roomId, onJoined]);
+  }, [session.roomId]);
 
   const handleCopy = async () => {
     try {

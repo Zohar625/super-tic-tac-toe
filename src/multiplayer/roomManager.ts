@@ -88,7 +88,7 @@ export async function joinRoom(
 export async function getRoom(roomId: string) {
   const { data, error } = await supabase
     .from('rooms')
-    .select('game_state, version, host_id, guest_id')
+    .select('game_state, version, host_id, guest_id, host_side')
     .eq('id', roomId)
     .single();
 
@@ -98,6 +98,7 @@ export async function getRoom(roomId: string) {
     version: data.version as number,
     hostId: data.host_id as string,
     guestId: data.guest_id as string | null,
+    hostSide: data.host_side as Player | null,
   };
 }
 
