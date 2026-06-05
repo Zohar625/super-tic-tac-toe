@@ -99,7 +99,7 @@ function App() {
 
   const handleStartWaiting = (s: MultiplayerSession) => {
     setSession(s);
-    setMode('waiting');
+    setMode(s.isHost ? 'waiting' : 'playing');
   };
 
   const handleJoined = (version: number) => {
