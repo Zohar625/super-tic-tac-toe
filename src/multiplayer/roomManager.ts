@@ -14,7 +14,13 @@ export async function generateUniqueCode(): Promise<string> {
   throw new Error('Failed to generate unique room code');
 }
 
+async function cleanupStaleRooms(): Promise<void> {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  await supabase.from('rooms').delete().lt('created_at', cutoff);
+}
+
 export async function createRoom(userId: string) {
+  await cleanupStaleRooms();
   const code = await generateUniqueCode();
   const initialState = createInitialState();
 
