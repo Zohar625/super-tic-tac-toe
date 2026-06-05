@@ -75,13 +75,14 @@ export async function joinRoom(
     updates.host_side = host;
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError, count } = await supabase
     .from('rooms')
     .update(updates)
     .eq('id', room.id)
-    .is('guest_id', null);
+    .is('guest_id', null)
+    .select('id', { count: 'exact', head: true });
 
-  if (updateError) return null;
+  if (updateError || count !== 1) return null;
   return { id: room.id, player: guest };
 }
 

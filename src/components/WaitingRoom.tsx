@@ -17,13 +17,20 @@ export default function WaitingRoom({ session, onJoined, onLeave }: WaitingRoomP
   useEffect(() => {
     let cancelled = false;
 
-    // Poll once in case guest already joined before subscription was active
-    getRoom(session.roomId).then((room) => {
+    // Poll every 3s as fallback in case Realtime misses the event
+    let pollTimer: ReturnType<typeof setInterval>;
+    const poll = () => {
       if (cancelled) return;
-      if (room?.guestId) {
-        onJoinedRef.current(room.hostSide || 'X');
-      }
-    });
+      getRoom(session.roomId).then((room) => {
+        if (cancelled) return;
+        if (room?.guestId) {
+          cancelled = true;
+          onJoinedRef.current(room.hostSide || 'X');
+        }
+      });
+    };
+    poll(); // immediate first check
+    pollTimer = setInterval(poll, 3000);
 
     const channel = supabase
       .channel(`room-guest:${session.roomId}`)
@@ -37,9 +44,8 @@ export default function WaitingRoom({ session, onJoined, onLeave }: WaitingRoomP
         },
         (payload) => {
           if (payload.new.guest_id && !cancelled) {
-            const hostPlayer = (payload.new.host_side as Player) || 'X';
-            cancelled = true; // prevent poll from double-firing
-            onJoinedRef.current(hostPlayer);
+            cancelled = true;
+            onJoinedRef.current((payload.new.host_side as Player) || 'X');
           }
         }
       )
@@ -47,6 +53,7 @@ export default function WaitingRoom({ session, onJoined, onLeave }: WaitingRoomP
 
     return () => {
       cancelled = true;
+      clearInterval(pollTimer);
       supabase.removeChannel(channel);
     };
   }, [session.roomId]);
