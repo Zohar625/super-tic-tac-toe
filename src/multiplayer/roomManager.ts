@@ -1,6 +1,15 @@
 import { supabase } from '../supabase/client';
-import type { GameState } from '../state/types';
+import type { GameState, Player } from '../state/types';
 import { createInitialState } from '../state/gameLogic';
+
+function resolveSides(hostPref: Player, guestPref: Player): { host: Player; guest: Player } {
+  if (hostPref !== guestPref) {
+    return { host: hostPref, guest: guestPref };
+  }
+  return Math.random() < 0.5
+    ? { host: 'X', guest: 'O' }
+    : { host: 'O', guest: 'X' };
+}
 
 export async function generateUniqueCode(): Promise<string> {
   for (let attempts = 0; attempts < 10; attempts++) {
@@ -19,7 +28,7 @@ async function cleanupStaleRooms(): Promise<void> {
   await supabase.from('rooms').delete().lt('created_at', cutoff);
 }
 
-export async function createRoom(userId: string) {
+export async function createRoom(userId: string, preferredSide: Player) {
   await cleanupStaleRooms();
   const code = await generateUniqueCode();
   const initialState = createInitialState();
@@ -29,6 +38,7 @@ export async function createRoom(userId: string) {
     .insert({
       code,
       host_id: userId,
+      host_side: preferredSide,
       game_state: initialState,
       version: 0,
     })
@@ -41,19 +51,38 @@ export async function createRoom(userId: string) {
 
 export async function joinRoom(
   userId: string,
-  code: string
-): Promise<{ id: string } | null> {
-  const { data, error } = await supabase
+  code: string,
+  preferredSide: Player
+): Promise<{ id: string; player: Player } | null> {
+  const { data: room, error: readError } = await supabase
     .from('rooms')
-    .update({ guest_id: userId, updated_at: new Date().toISOString() })
+    .select('id, host_id, host_side')
     .eq('code', code)
     .is('guest_id', null)
     .neq('host_id', userId)
-    .select('id')
     .single();
 
-  if (error || !data) return null;
-  return { id: data.id };
+  if (readError || !room) return null;
+
+  const hostPref = (room.host_side as Player) || 'X';
+  const { host, guest } = resolveSides(hostPref, preferredSide);
+
+  const updates: Record<string, unknown> = {
+    guest_id: userId,
+    updated_at: new Date().toISOString(),
+  };
+  if (host !== hostPref) {
+    updates.host_side = host;
+  }
+
+  const { error: updateError } = await supabase
+    .from('rooms')
+    .update(updates)
+    .eq('id', room.id)
+    .is('guest_id', null);
+
+  if (updateError) return null;
+  return { id: room.id, player: guest };
 }
 
 export async function getRoom(roomId: string) {

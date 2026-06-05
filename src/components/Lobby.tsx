@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { getUserId } from '../supabase/client';
 import { createRoom, joinRoom } from '../multiplayer/roomManager';
-import type { MultiplayerSession } from '../state/types';
+import type { Player, MultiplayerSession } from '../state/types';
 
 interface LobbyProps {
   onStart: (session: MultiplayerSession) => void;
@@ -11,6 +11,7 @@ interface LobbyProps {
 export default function Lobby({ onStart, onBack }: LobbyProps) {
   const [tab, setTab] = useState<'create' | 'join'>('create');
   const [joinCode, setJoinCode] = useState('');
+  const [side, setSide] = useState<Player>('X');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -19,11 +20,11 @@ export default function Lobby({ onStart, onBack }: LobbyProps) {
     setError('');
     try {
       const userId = getUserId();
-      const room = await createRoom(userId);
+      const room = await createRoom(userId, side);
       onStart({
         roomId: room.id,
         roomCode: room.code,
-        player: 'X',
+        player: side,
         isHost: true,
         localVersion: 0,
       });
@@ -39,7 +40,7 @@ export default function Lobby({ onStart, onBack }: LobbyProps) {
     setError('');
     try {
       const userId = getUserId();
-      const room = await joinRoom(userId, joinCode);
+      const room = await joinRoom(userId, joinCode, side);
       if (!room) {
         setError('房间不存在或已满');
         setLoading(false);
@@ -48,7 +49,7 @@ export default function Lobby({ onStart, onBack }: LobbyProps) {
       onStart({
         roomId: room.id,
         roomCode: joinCode,
-        player: 'O',
+        player: room.player,
         isHost: false,
         localVersion: 0,
       });
@@ -85,6 +86,26 @@ export default function Lobby({ onStart, onBack }: LobbyProps) {
           }}
         >
           加入房间
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <span style={{ fontSize: 15, color: '#666' }}>选择棋子:</span>
+        <button
+          onClick={() => setSide(side === 'X' ? 'O' : 'X')}
+          style={{
+            padding: '8px 20px',
+            fontSize: 18,
+            fontWeight: 700,
+            borderRadius: 8,
+            border: `2px solid ${side === 'X' ? '#2196f3' : '#ff9800'}`,
+            background: side === 'X' ? '#e3f2fd' : '#fff3e0',
+            color: side === 'X' ? '#1565c0' : '#e65100',
+            cursor: 'pointer',
+            minWidth: 100,
+          }}
+        >
+          {side}（{side === 'X' ? '先手' : '后手'}）
         </button>
       </div>
 

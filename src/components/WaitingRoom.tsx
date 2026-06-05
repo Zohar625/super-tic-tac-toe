@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import type { MultiplayerSession } from '../state/types';
+import type { Player, MultiplayerSession } from '../state/types';
 import { supabase } from '../supabase/client';
 import { deleteRoom } from '../multiplayer/roomManager';
 
 interface WaitingRoomProps {
   session: MultiplayerSession;
-  onJoined: (version: number) => void;
+  onJoined: (hostPlayer: Player) => void;
   onLeave: () => void;
 }
 
@@ -26,8 +26,8 @@ export default function WaitingRoom({ session, onJoined, onLeave }: WaitingRoomP
         },
         (payload) => {
           if (payload.new.guest_id) {
-            const version = payload.new.version as number;
-            onJoined(version);
+            const hostPlayer = (payload.new.host_side as Player) || 'X';
+            onJoined(hostPlayer);
           }
         }
       )
