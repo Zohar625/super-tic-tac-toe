@@ -60,7 +60,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       newBoard[lastMove.globalRow][lastMove.globalCol] = null;
 
       // Recalculate nextBoard from the move before last
-      let nextBoard: { row: number; col: number } | null = { row: 1, col: 1 };
+      let nextBoard: { row: number; col: number } | null = null;
       if (newHistory.length) {
         const prev = newHistory[newHistory.length - 1];
         const sr = prev.globalRow % 3;
