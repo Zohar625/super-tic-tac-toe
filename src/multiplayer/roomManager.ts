@@ -80,7 +80,7 @@ export async function joinRoom(
     .update(updates)
     .eq('id', room.id)
     .is('guest_id', null)
-    .select('id', { count: 'exact', head: true });
+    .select('id', { count: 'exact' });
 
   if (updateError || count !== 1) return null;
   return { id: room.id, player: guest };
@@ -118,7 +118,7 @@ export async function updateGameState(
     })
     .eq('id', roomId)
     .eq('version', expectedVersion)
-    .select('id', { count: 'exact', head: true });
+    .select('id', { count: 'exact' });
 
   if (error) return false;
   return count === 1;
