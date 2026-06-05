@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Player, MultiplayerSession } from '../state/types';
-import { supabase } from '../supabase/client';
 import { cancelRoom, getRoom } from '../multiplayer/roomManager';
 
 interface WaitingRoomProps {
@@ -17,8 +16,6 @@ export default function WaitingRoom({ session, onJoined, onLeave }: WaitingRoomP
   useEffect(() => {
     let cancelled = false;
 
-    // Poll every 3s as fallback in case Realtime misses the event
-    let pollTimer: ReturnType<typeof setInterval>;
     const poll = () => {
       if (cancelled) return;
       getRoom(session.roomId).then((room) => {
@@ -29,32 +26,12 @@ export default function WaitingRoom({ session, onJoined, onLeave }: WaitingRoomP
         }
       });
     };
-    poll(); // immediate first check
-    pollTimer = setInterval(poll, 3000);
-
-    const channel = supabase
-      .channel(`room-guest:${session.roomId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'rooms',
-          filter: `id=eq.${session.roomId}`,
-        },
-        (payload) => {
-          if (payload.new.guest_id && !cancelled) {
-            cancelled = true;
-            onJoinedRef.current((payload.new.host_side as Player) || 'X');
-          }
-        }
-      )
-      .subscribe();
+    poll();
+    const pollTimer = setInterval(poll, 2000);
 
     return () => {
       cancelled = true;
       clearInterval(pollTimer);
-      supabase.removeChannel(channel);
     };
   }, [session.roomId]);
 

@@ -54,32 +54,32 @@ export async function joinRoom(
   code: string,
   preferredSide: Player
 ): Promise<{ id: string; player: Player } | null> {
-  // Read host preference
-  const { data: room, error: readError } = await supabase
+  // Atomic UPDATE: set guest_id and return host_side
+  const { data, error } = await supabase
     .from('rooms')
-    .select('id, host_side')
+    .update({ guest_id: userId, updated_at: new Date().toISOString() })
     .eq('code', code)
+    .is('guest_id', null)
+    .select('id, host_side')
     .single();
 
-  if (readError || !room) return null;
+  if (error) {
+    console.error('joinRoom failed:', error.code, error.message);
+    return null;
+  }
 
-  const hostPref = (room.host_side as Player) || 'X';
+  const hostPref = (data.host_side as Player) || 'X';
   const { host, guest } = resolveSides(hostPref, preferredSide);
 
-  // Atomic UPDATE: set guest_id AND corrected host_side in one shot
-  const { error: updateError, count } = await supabase
-    .from('rooms')
-    .update({
-      guest_id: userId,
-      host_side: host,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', room.id)
-    .is('guest_id', null)
-    .select('id', { count: 'exact' });
+  // Fix host_side if reassigned (fires after join, poll catches final value)
+  if (host !== hostPref) {
+    await supabase
+      .from('rooms')
+      .update({ host_side: host })
+      .eq('id', data.id);
+  }
 
-  if (updateError || count !== 1) return null;
-  return { id: room.id, player: guest };
+  return { id: data.id, player: guest };
 }
 
 export async function getRoom(roomId: string) {
