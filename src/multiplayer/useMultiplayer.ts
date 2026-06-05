@@ -79,10 +79,20 @@ export function useMultiplayer(session: MultiplayerSession) {
     [session.roomId]
   );
 
-  // Read path: subscribe to Realtime
+  // Read path: subscribe to Realtime + poll fallback
   useEffect(() => {
-    // Initial fetch
     fetchServerState();
+
+    // Poll every 2s as fallback in case Realtime misses events
+    const pollTimer = setInterval(() => {
+      getRoom(session.roomId).then((room) => {
+        if (!room) return;
+        if (room.version > localVersionRef.current) {
+          localVersionRef.current = room.version;
+          dispatch({ type: 'SET_GAME_STATE', state: room.gameState });
+        }
+      });
+    }, 2000);
 
     const channel = supabase
       .channel(`room:${session.roomId}`)
@@ -107,6 +117,7 @@ export function useMultiplayer(session: MultiplayerSession) {
       .subscribe();
 
     return () => {
+      clearInterval(pollTimer);
       supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
