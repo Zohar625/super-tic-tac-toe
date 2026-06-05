@@ -8,8 +8,9 @@ import GameStatus from './components/GameStatus';
 import ActionBar from './components/ActionBar';
 import Lobby from './components/Lobby';
 import WaitingRoom from './components/WaitingRoom';
+import { getUserId } from './supabase/client';
 import { useMultiplayer } from './multiplayer/useMultiplayer';
-import { deleteRoom } from './multiplayer/roomManager';
+import { leaveRoom, cancelRoom } from './multiplayer/roomManager';
 import type { Player, GameMode, MultiplayerSession } from './state/types';
 import styles from './App.module.css';
 
@@ -129,10 +130,12 @@ function MultiplayerGame({
   session: MultiplayerSession;
   onLeave: () => void;
 }) {
-  const { state, handleCellClick } = useMultiplayer(session);
+  const { state, handleCellClick, opponentLeft } = useMultiplayer(session);
 
   const isMyTurn =
-    state.currentPlayer === session.player && state.winner === null;
+    !opponentLeft &&
+    state.currentPlayer === session.player &&
+    state.winner === null;
 
   return (
     <>
@@ -144,6 +147,11 @@ function MultiplayerGame({
         roomCode={session.roomCode}
         myPlayer={session.player}
       />
+      {opponentLeft && (
+        <p style={{ color: '#e53935', fontWeight: 600, margin: '8px 0' }}>
+          对手已离开房间
+        </p>
+      )}
       <BigBoard
         state={state}
         onCellClick={handleCellClick}
@@ -178,10 +186,10 @@ function App() {
 
   const handleLeave = async () => {
     if (session) {
-      await deleteRoom(session.roomId);
+      await leaveRoom(session.roomId, getUserId());
     }
     setSession(null);
-    setMode('local');
+    setMode('lobby');
   };
 
   return (

@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useEffect, useRef } from 'react';
+import { useReducer, useCallback, useEffect, useRef, useState } from 'react';
 import { gameReducer } from '../state/gameReducer';
 import type { GameState, MultiplayerSession } from '../state/types';
 import { createInitialState, checkWin, getNextBoard, isDraw } from '../state/gameLogic';
@@ -7,6 +7,7 @@ import { updateGameState, getRoom } from './roomManager';
 
 export function useMultiplayer(session: MultiplayerSession) {
   const [state, dispatch] = useReducer(gameReducer, null, createInitialState);
+  const [opponentLeft, setOpponentLeft] = useState(false);
   const localVersionRef = useRef(session.localVersion);
   const stateRef = useRef<GameState>(state);
   stateRef.current = state;
@@ -27,11 +28,10 @@ export function useMultiplayer(session: MultiplayerSession) {
   // Write path: handle local cell click
   const handleCellClick = useCallback(
     (globalRow: number, globalCol: number) => {
-      // Only allow clicks during own turn
+      if (opponentLeft) return;
       if (stateRef.current.currentPlayer !== sessionRef.current.player) return;
       if (stateRef.current.winner) return;
 
-      // Compute new state
       const nextBoard = stateRef.current.board.map((row) => [...row]);
       nextBoard[globalRow][globalCol] = stateRef.current.currentPlayer;
 
@@ -56,12 +56,10 @@ export function useMultiplayer(session: MultiplayerSession) {
         ],
       };
 
-      // Optimistic local update
       dispatch({ type: 'SET_GAME_STATE', state: newState });
       const attemptedVersion = localVersionRef.current + 1;
       localVersionRef.current = attemptedVersion;
 
-      // Write to Supabase
       const ok = updateGameState(
         sessionRef.current.roomId,
         newState,
@@ -70,23 +68,32 @@ export function useMultiplayer(session: MultiplayerSession) {
 
       ok.then((success) => {
         if (!success) {
-          // Rollback: fetch server state
           fetchServerState();
         }
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [session.roomId]
+    [session.roomId, opponentLeft]
   );
 
   // Read path: subscribe to Realtime + poll fallback
   useEffect(() => {
+    let cancelled = false;
     fetchServerState();
 
-    // Poll every 2s as fallback in case Realtime misses events
     const pollTimer = setInterval(() => {
       getRoom(session.roomId).then((room) => {
-        if (!room) return;
+        if (cancelled) return;
+        if (!room) {
+          // Room was deleted (host left)
+          setOpponentLeft(true);
+          return;
+        }
+        if (room.guestId === null) {
+          // Guest slot cleared (guest left)
+          setOpponentLeft(true);
+          return;
+        }
         if (room.version > localVersionRef.current) {
           localVersionRef.current = room.version;
           dispatch({ type: 'SET_GAME_STATE', state: room.gameState });
@@ -105,6 +112,11 @@ export function useMultiplayer(session: MultiplayerSession) {
           filter: `id=eq.${session.roomId}`,
         },
         (payload) => {
+          if (cancelled) return;
+          if (!payload.new.guest_id) {
+            setOpponentLeft(true);
+            return;
+          }
           const remoteState = payload.new.game_state as unknown as GameState;
           const remoteVersion = payload.new.version as number;
 
@@ -117,6 +129,7 @@ export function useMultiplayer(session: MultiplayerSession) {
       .subscribe();
 
     return () => {
+      cancelled = true;
       clearInterval(pollTimer);
       supabase.removeChannel(channel);
     };
@@ -126,5 +139,6 @@ export function useMultiplayer(session: MultiplayerSession) {
   return {
     state,
     handleCellClick,
+    opponentLeft,
   };
 }

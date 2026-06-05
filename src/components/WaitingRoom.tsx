@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Player, MultiplayerSession } from '../state/types';
 import { supabase } from '../supabase/client';
-import { deleteRoom, getRoom } from '../multiplayer/roomManager';
+import { cancelRoom, getRoom } from '../multiplayer/roomManager';
 
 interface WaitingRoomProps {
   session: MultiplayerSession;
@@ -75,7 +75,7 @@ export default function WaitingRoom({ session, onJoined, onLeave }: WaitingRoomP
   };
 
   const handleCancel = async () => {
-    await deleteRoom(session.roomId);
+    await cancelRoom(session.roomId);
     onLeave();
   };
 

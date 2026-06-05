@@ -120,6 +120,27 @@ export async function updateGameState(
   return count === 1;
 }
 
-export async function deleteRoom(roomId: string): Promise<void> {
+export async function leaveRoom(roomId: string, userId: string): Promise<void> {
+  const { data: room } = await supabase
+    .from('rooms')
+    .select('host_id, guest_id')
+    .eq('id', roomId)
+    .single();
+
+  if (!room) return;
+
+  if (room.host_id === userId) {
+    // Host leaves: delete room entirely
+    await supabase.from('rooms').delete().eq('id', roomId);
+  } else if (room.guest_id === userId) {
+    // Guest leaves: clear guest_id, room returns to waiting
+    await supabase
+      .from('rooms')
+      .update({ guest_id: null, updated_at: new Date().toISOString() })
+      .eq('id', roomId);
+  }
+}
+
+export async function cancelRoom(roomId: string): Promise<void> {
   await supabase.from('rooms').delete().eq('id', roomId);
 }
