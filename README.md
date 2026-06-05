@@ -1,73 +1,37 @@
-# React + TypeScript + Vite
+# 超级井字棋 / Super Tic-Tac-Toe
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+在线试玩：<https://zohar625.github.io/super-tic-tac-toe/>
 
-Currently, two official plugins are available:
+## 游戏规则
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+你和大棋盘（9×9）下棋，里面包含 9 个小棋盘（3×3）：
 
-## React Compiler
+1. X 先手，双方轮流落子
+2. **你的落子位置决定了对手下一步必须在哪个小棋盘下**——例如你在某个小棋盘的右上角落子，对手下一步就必须在右上角的小棋盘落子
+3. 如果目标小棋盘已满，对手可自由选择任意棋盘
+4. 率先在任意行、列或对角线上**赢下 3 个小棋盘**的一方获胜
+5. 整个大棋盘下满则为平局
+6. 首步不能下在正中间的小棋盘，以防止先手优势过大
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+支持**本地双人**和**联机对战**（创建房间 → 分享 4 位房间码）。
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Rules
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Play on a 9×9 big board containing nine 3×3 small boards:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+1. X goes first, players take turns
+2. **Your move determines which small board your opponent must play next** — e.g., playing in the top-right cell of a small board sends your opponent to the top-right small board
+3. If the target small board is full, your opponent may play anywhere
+4. **Win 3 small boards** in a row, column, or diagonal to win the game
+5. Full board with no winner = draw
+6. First move excludes the center small board to balance first-player advantage
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Supports **local two-player** and **online multiplayer** (create room → share 4-digit code).
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+如果觉得好玩，**点个 Star ⭐** 支持一下吧！
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+If you enjoy this game, please **give it a Star ⭐** — it means a lot!
