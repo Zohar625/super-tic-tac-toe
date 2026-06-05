@@ -27,6 +27,7 @@ function App() {
           currentPlayer={state.currentPlayer}
           nextBoard={state.nextBoard}
           winner={state.winner}
+          moveCount={state.moveHistory.length}
         />
         <BigBoard state={state} onCellClick={handleCellClick} />
         <ActionBar

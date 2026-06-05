@@ -23,7 +23,11 @@ export default function BigBoard({ state, onCellClick }: BigBoardProps) {
 
   const isSmallBoardActive = (bigRow: number, bigCol: number): boolean => {
     if (winner) return false;
-    if (!nextBoard) return true; // null = free choice everywhere
+    if (!nextBoard) {
+      // First move: center board excluded
+      if (state.moveHistory.length === 0 && bigRow === 1 && bigCol === 1) return false;
+      return true;
+    }
     return nextBoard.row === bigRow && nextBoard.col === bigCol;
   };
 

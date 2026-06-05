@@ -79,6 +79,13 @@ export function isValidMove(
   // Game must not be over
   if (state.winner) return false;
 
+  // First move: cannot play in center board (1,1)
+  if (state.moveHistory.length === 0) {
+    const bigRow = Math.floor(globalRow / 3);
+    const bigCol = Math.floor(globalCol / 3);
+    if (bigRow === 1 && bigCol === 1) return false;
+  }
+
   // If nextBoard specified, move must be in that small board
   if (state.nextBoard) {
     const targetBigRow = Math.floor(globalRow / 3);
@@ -108,7 +115,7 @@ export function createInitialState(): GameState {
   return {
     board: createEmptyBoard(),
     currentPlayer: 'X',
-    nextBoard: { row: 1, col: 1 }, // first move must be in center board
+    nextBoard: null, // first move free choice, center board excluded via isValidMove
     winner: null,
     moveHistory: [],
   };

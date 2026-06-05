@@ -7,12 +7,14 @@ interface GameHeaderProps {
   currentPlayer: Player;
   nextBoard: { row: number; col: number } | null;
   winner: Player | 'draw' | null;
+  moveCount: number;
 }
 
 export default function GameHeader({
   currentPlayer,
   nextBoard,
   winner,
+  moveCount,
 }: GameHeaderProps) {
   const { theme } = useTheme();
   const symbol = getPieceSymbol(theme.pieceSet, currentPlayer);
@@ -30,6 +32,8 @@ export default function GameHeader({
   let hintText = '';
   if (!winner && nextBoard) {
     hintText = `请下在棋盘 (${nextBoard.row + 1}, ${nextBoard.col + 1})`;
+  } else if (!winner && !nextBoard && moveCount === 0) {
+    hintText = '可在除中间外任意棋盘落子';
   } else if (!winner && !nextBoard) {
     hintText = '可在任意棋盘落子';
   }
