@@ -1,4 +1,4 @@
-import type { Board, CellValue, GameState } from './types';
+import type { Board, CellValue, GameState, Player } from './types';
 import { createEmptyBoard } from './types';
 
 // Directions to check: horizontal, vertical, two diagonals
@@ -66,7 +66,8 @@ export function isSmallBoardFull(
 export function isValidMove(
   state: GameState,
   globalRow: number,
-  globalCol: number
+  globalCol: number,
+  player?: Player
 ): boolean {
   if (
     globalRow < 0 || globalRow > 8 ||
@@ -78,6 +79,9 @@ export function isValidMove(
 
   // Game must not be over
   if (state.winner) return false;
+
+  // Multiplayer: reject if not your turn
+  if (player !== undefined && state.currentPlayer !== player) return false;
 
   // First move: cannot play in center board (1,1)
   if (state.moveHistory.length === 0) {

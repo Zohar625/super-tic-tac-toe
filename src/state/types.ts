@@ -27,3 +27,13 @@ export interface ThemeConfig {
 export function createEmptyBoard(): Board {
   return Array.from({ length: 9 }, () => Array(9).fill(null));
 }
+
+export type GameMode = 'local' | 'lobby' | 'waiting' | 'playing';
+
+export interface MultiplayerSession {
+  roomId: string;
+  roomCode: string;
+  player: Player;
+  isHost: boolean;
+  localVersion: number;
+}

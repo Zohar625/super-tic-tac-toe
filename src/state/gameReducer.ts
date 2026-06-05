@@ -14,7 +14,8 @@ export type GameAction =
       globalCol: number;
     }
   | { type: 'UNDO' }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'SET_GAME_STATE'; state: GameState };
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -79,6 +80,9 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'RESET':
       return createInitialState();
+
+    case 'SET_GAME_STATE':
+      return action.state;
 
     default:
       return state;

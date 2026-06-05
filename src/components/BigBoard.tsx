@@ -5,9 +5,10 @@ import styles from '../styles/BigBoard.module.css';
 interface BigBoardProps {
   state: GameState;
   onCellClick: (globalRow: number, globalCol: number) => void;
+  isMyTurn?: boolean;
 }
 
-export default function BigBoard({ state, onCellClick }: BigBoardProps) {
+export default function BigBoard({ state, onCellClick, isMyTurn }: BigBoardProps) {
   const { board, nextBoard, winner } = state;
 
   const handleCellClick = (
@@ -22,6 +23,7 @@ export default function BigBoard({ state, onCellClick }: BigBoardProps) {
   };
 
   const isSmallBoardActive = (bigRow: number, bigCol: number): boolean => {
+    if (isMyTurn === false) return false;
     if (winner) return false;
     if (!nextBoard) {
       // First move: center board excluded

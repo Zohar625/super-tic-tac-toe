@@ -1,6 +1,7 @@
 import type { Player } from '../state/types';
 import { useTheme } from '../theme/ThemeContext';
 import { getPieceSymbol } from '../theme/themes';
+import PlayerBadge from './PlayerBadge';
 import styles from '../styles/GameHeader.module.css';
 
 interface GameHeaderProps {
@@ -8,6 +9,8 @@ interface GameHeaderProps {
   nextBoard: { row: number; col: number } | null;
   winner: Player | 'draw' | null;
   moveCount: number;
+  roomCode?: string;
+  myPlayer?: Player;
 }
 
 export default function GameHeader({
@@ -15,6 +18,8 @@ export default function GameHeader({
   nextBoard,
   winner,
   moveCount,
+  roomCode,
+  myPlayer,
 }: GameHeaderProps) {
   const { theme } = useTheme();
   const symbol = getPieceSymbol(theme.pieceSet, currentPlayer);
@@ -41,7 +46,17 @@ export default function GameHeader({
   return (
     <div className={styles.header}>
       <h1 className={styles.title}>超级井字棋</h1>
+      {roomCode && (
+        <p className={styles.hint} style={{ fontFamily: 'monospace' }}>
+          房间 {roomCode}
+        </p>
+      )}
       <p className={styles.turn}>{statusText}</p>
+      {myPlayer && (
+        <div style={{ marginTop: 4 }}>
+          <PlayerBadge myPlayer={myPlayer} currentPlayer={currentPlayer} />
+        </div>
+      )}
       {hintText && <p className={styles.hint}>{hintText}</p>}
     </div>
   );
