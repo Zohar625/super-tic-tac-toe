@@ -1,27 +1,16 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import type { ThemeConfig } from '../state/types';
-import { classicTheme } from './themes';
-
-interface ThemeContextValue {
-  theme: ThemeConfig;
-  setTheme: (theme: ThemeConfig) => void;
+import { grassTheme } from './themes';
+import { ThemeContext } from './useTheme';
+function loadTheme(): ThemeConfig {
+  try {
+    const saved = JSON.parse(localStorage.getItem('super-ttt-theme-v2') ?? 'null');
+    if (saved && ['classic', 'grass', 'rice'].includes(saved.boardSkin)) return { ...grassTheme, boardSkin: saved.boardSkin, motion: saved.motion !== false };
+  } catch { /* A blocked storage area must not prevent local play. */ }
+  return grassTheme;
 }
-
-const ThemeContext = createContext<ThemeContextValue>({
-  theme: classicTheme,
-  setTheme: () => {},
-});
-
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<ThemeConfig>(classicTheme);
-
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
-}
-
-export function useTheme(): ThemeContextValue {
-  return useContext(ThemeContext);
+  const [theme, updateTheme] = useState<ThemeConfig>(loadTheme);
+  const setTheme = (next: ThemeConfig) => { updateTheme(next); try { localStorage.setItem('super-ttt-theme-v2', JSON.stringify(next)); } catch { /* Optional persistence. */ } };
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 }

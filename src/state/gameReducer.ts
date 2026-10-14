@@ -33,9 +33,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         globalCol,
       };
 
-      const winner = checkWin(newBoard, globalRow, globalCol);
+      const winResult = checkWin(newBoard, globalRow, globalCol);
 
-      // smallRow/col are the position within the 3x3 small board
       const smallRow = globalRow % 3;
       const smallCol = globalCol % 3;
       const nextBoard = getNextBoard(newBoard, smallRow, smallCol);
@@ -46,7 +45,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         board: newBoard,
         currentPlayer: nextPlayer,
         nextBoard,
-        winner: winner || (isDraw(newBoard) ? 'draw' : null),
+        winner: winResult?.winner || (isDraw(newBoard) ? 'draw' : null),
+        winningCells: winResult?.cells || null,
         moveHistory: [...state.moveHistory, move],
       };
     }
@@ -74,6 +74,7 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         currentPlayer: lastMove.player,
         nextBoard,
         winner: null,
+        winningCells: null,
         moveHistory: newHistory,
       };
     }

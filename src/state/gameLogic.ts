@@ -1,4 +1,4 @@
-import type { Board, CellValue, GameState, Player } from './types';
+import type { Board, GameState, Player } from './types';
 import { createEmptyBoard } from './types';
 
 // Directions to check: horizontal, vertical, two diagonals
@@ -11,25 +11,25 @@ const DIRECTIONS = [
 
 /**
  * Check if the last move created a winning 3-in-a-row.
- * Scans all 4 directions. Returns the winning player, or null.
+ * Scans all 4 directions. Returns winner + winning cells, or null.
  */
 export function checkWin(
   board: Board,
   lastRow: number,
   lastCol: number
-): CellValue {
+): { winner: Player; cells: [number, number][] } | null {
   const player = board[lastRow][lastCol];
   if (!player) return null;
 
   for (const [dr, dc] of DIRECTIONS) {
-    let count = 1;
+    const cells: [number, number][] = [[lastRow, lastCol]];
 
     // Scan forward
     for (let i = 1; i < 3; i++) {
       const r = lastRow + dr * i;
       const c = lastCol + dc * i;
       if (r >= 0 && r < 9 && c >= 0 && c < 9 && board[r][c] === player) {
-        count++;
+        cells.push([r, c]);
       } else break;
     }
 
@@ -38,11 +38,11 @@ export function checkWin(
       const r = lastRow - dr * i;
       const c = lastCol - dc * i;
       if (r >= 0 && r < 9 && c >= 0 && c < 9 && board[r][c] === player) {
-        count++;
+        cells.unshift([r, c]);
       } else break;
     }
 
-    if (count >= 3) return player;
+    if (cells.length >= 3) return { winner: player, cells: cells.slice(0, 3) };
   }
 
   return null;
@@ -70,6 +70,7 @@ export function isValidMove(
   player?: Player
 ): boolean {
   if (
+    !Number.isInteger(globalRow) || !Number.isInteger(globalCol) ||
     globalRow < 0 || globalRow > 8 ||
     globalCol < 0 || globalCol > 8
   ) return false;
@@ -119,8 +120,9 @@ export function createInitialState(): GameState {
   return {
     board: createEmptyBoard(),
     currentPlayer: 'X',
-    nextBoard: null, // first move free choice, center board excluded via isValidMove
+    nextBoard: null,
     winner: null,
+    winningCells: null,
     moveHistory: [],
   };
 }

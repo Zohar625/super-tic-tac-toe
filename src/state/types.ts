@@ -16,12 +16,14 @@ export interface GameState {
   currentPlayer: Player;
   nextBoard: { row: number; col: number } | null;
   winner: Player | 'draw' | null;
+  winningCells: [number, number][] | null;
   moveHistory: Move[];
 }
 
 export interface ThemeConfig {
-  boardSkin: 'classic' | 'grass';
+  boardSkin: 'classic' | 'grass' | 'rice';
   pieceSet: 'X-O' | 'cat-dog' | 'sun-moon';
+  motion: boolean;
 }
 
 export function createEmptyBoard(): Board {
